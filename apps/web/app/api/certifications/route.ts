@@ -1,6 +1,7 @@
-import { prisma } from "@/lib/db";
-
 export async function GET() {
-  const data = await prisma.certification.findMany({ orderBy: { name: "asc" } });
-  return Response.json(data);
+  return Response.json([
+    { id: 1, name: "MBE" },
+    { id: 2, name: "DBE" },
+    { id: 3, name: "Small Business" }
+  ]);
 }

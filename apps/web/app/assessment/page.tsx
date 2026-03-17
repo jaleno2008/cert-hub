@@ -1,8 +1,11 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 export default function AssessmentPage() {
+  const router = useRouter()
+
   const [answers, setAnswers] = useState({
     registered: false,
     ein: false,
@@ -10,136 +13,92 @@ export default function AssessmentPage() {
     insurance: false,
     financials: false,
     capability: false,
-    pastPerformance: false
+    pastPerformance: false,
   })
 
-  const handleChange = (field: keyof typeof answers) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [field]: !prev[field]
-    }))
+  function handleChange(e: any) {
+    setAnswers({
+      ...answers,
+      [e.target.name]: e.target.checked,
+    })
   }
 
-  const calculateScore = () => {
-    let score = 0
+  async function calculateScore() {
+    const values = Object.values(answers)
+    const total = values.length
+    const positive = values.filter(Boolean).length
 
-    if (answers.registered) score += 20
-    if (answers.ein) score += 10
-    if (answers.bank) score += 10
-    if (answers.insurance) score += 20
-    if (answers.financials) score += 20
-    if (answers.capability) score += 10
-    if (answers.pastPerformance) score += 10
+    const score = Math.round((positive / total) * 100)
 
-    localStorage.setItem("readinessScore", score.toString())
-    localStorage.setItem("readinessAnswers", JSON.stringify(answers))
+    await fetch("/api/results", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        answers,
+        score,
+      }),
+    })
 
-    window.location.href = "/dashboard"
+    router.push("/dashboard")
   }
 
   return (
-    <div style={{ padding: "40px", fontFamily: "Arial, sans-serif" }}>
+    <div style={{ padding: 40 }}>
       <h1>Certification Readiness Assessment</h1>
 
-      <p>
-        Answer the following questions to evaluate your certification readiness.
-      </p>
+      <label>
+        <input type="checkbox" name="registered" onChange={handleChange} />
+        Business is legally registered
+      </label>
 
-      <div style={{ marginTop: "20px" }}>
-        <label>
-          <input
-            type="checkbox"
-            checked={answers.registered}
-            onChange={() => handleChange("registered")}
-          />{" "}
-          Business is legally registered
-        </label>
+      <br />
 
-        <br />
-        <br />
+      <label>
+        <input type="checkbox" name="ein" onChange={handleChange} />
+        Business has an EIN
+      </label>
 
-        <label>
-          <input
-            type="checkbox"
-            checked={answers.ein}
-            onChange={() => handleChange("ein")}
-          />{" "}
-          Business has an EIN
-        </label>
+      <br />
 
-        <br />
-        <br />
+      <label>
+        <input type="checkbox" name="bank" onChange={handleChange} />
+        Business bank account
+      </label>
 
-        <label>
-          <input
-            type="checkbox"
-            checked={answers.bank}
-            onChange={() => handleChange("bank")}
-          />{" "}
-          Business has a business bank account
-        </label>
+      <br />
 
-        <br />
-        <br />
+      <label>
+        <input type="checkbox" name="insurance" onChange={handleChange} />
+        Insurance coverage
+      </label>
 
-        <label>
-          <input
-            type="checkbox"
-            checked={answers.insurance}
-            onChange={() => handleChange("insurance")}
-          />{" "}
-          Business has insurance coverage
-        </label>
+      <br />
 
-        <br />
-        <br />
+      <label>
+        <input type="checkbox" name="financials" onChange={handleChange} />
+        Financial statements
+      </label>
 
-        <label>
-          <input
-            type="checkbox"
-            checked={answers.financials}
-            onChange={() => handleChange("financials")}
-          />{" "}
-          Business has financial statements
-        </label>
+      <br />
 
-        <br />
-        <br />
+      <label>
+        <input type="checkbox" name="capability" onChange={handleChange} />
+        Capability statement
+      </label>
 
-        <label>
-          <input
-            type="checkbox"
-            checked={answers.capability}
-            onChange={() => handleChange("capability")}
-          />{" "}
-          Business has a capability statement
-        </label>
+      <br />
 
-        <br />
-        <br />
+      <label>
+        <input type="checkbox" name="pastPerformance" onChange={handleChange} />
+        Past performance
+      </label>
 
-        <label>
-          <input
-            type="checkbox"
-            checked={answers.pastPerformance}
-            onChange={() => handleChange("pastPerformance")}
-          />{" "}
-          Business has past performance
-        </label>
-      </div>
+      <br />
+      <br />
 
-      <button
-        onClick={calculateScore}
-        style={{
-          marginTop: "30px",
-          padding: "12px 20px",
-          background: "#2563eb",
-          color: "white",
-          border: "none",
-          borderRadius: "8px",
-          cursor: "pointer"
-        }}
-      >
+      <button onClick={calculateScore}>
         Calculate Readiness Score
       </button>
     </div>

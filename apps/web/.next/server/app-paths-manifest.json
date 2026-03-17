@@ -1,5 +1,15 @@
 {
-  "/login/page": "app/login/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/certifications/route": "app/api/certifications/route.js",
+  "/api/documents/route": "app/api/documents/route.js",
+  "/api/results/latest/route": "app/api/results/latest/route.js",
+  "/api/results/route": "app/api/results/route.js",
+  "/api/upload/route": "app/api/upload/route.js",
   "/api/login/route": "app/api/login/route.js",
-  "/assessment/page": "app/assessment/page.js"
+  "/assessment/page": "app/assessment/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/login/page": "app/login/page.js",
+  "/dashboard/uploads/page": "app/dashboard/uploads/page.js",
+  "/page": "app/page.js",
+  "/api/health/route": "app/api/health/route.js"
 }
