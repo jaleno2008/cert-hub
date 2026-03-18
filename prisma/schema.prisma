@@ -33,3 +33,24 @@ model AssessmentResult {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
+
+model Result {
+  id        Int      @id @default(autoincrement())
+  score     Int
+  answers   String
+  createdAt DateTime @default(now())
+}
+
+model BusinessDocument {
+  id            String   @id @default(cuid())
+  documentType  String
+  fileName      String
+  fileUrl       String
+  filePath      String
+  contentType   String?
+  fileSize      Int?
+  certification String?
+  status        String   @default("uploaded")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
