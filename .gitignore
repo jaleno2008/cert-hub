@@ -1,1 +1,30 @@
 node_modules
+.DS_Store
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build output
+.next/
+dist/
+out/
+coverage/
+test-results/
+playwright-report/
+
+# Environment and local-only data
+.env
+.env.*
+!.env.example
+prisma/*.db
+prisma/*.db-journal
+
+# App-local artifacts
+apps/web/.next/
+apps/web/.next_backup_*/
+apps/web/test-results/
+apps/web/uploads/
+apps/web/.env
+apps/web/.env.*
+!apps/web/.env.example

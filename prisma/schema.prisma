@@ -4,53 +4,30 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
-model Tester {
-  id         String             @id @default(cuid())
-  email      String             @unique
-  createdAt  DateTime           @default(now())
-  updatedAt  DateTime           @updatedAt
-  assessment AssessmentResult?
+model User {
+  id        String             @id @default(cuid())
+  name      String
+  email     String             @unique
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  uploads   UploadedDocument[]
 }
 
-model AssessmentResult {
-  id               String   @id @default(cuid())
-  testerId         String   @unique
-  tester           Tester   @relation(fields: [testerId], references: [id], onDelete: Cascade)
+model UploadedDocument {
+  id         String   @id @default(cuid())
+  documentId String
+  fileName   String
+  filePath   String
+  status     String   @default("uploaded")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  score            Int
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  registered       Boolean  @default(false)
-  ein              Boolean  @default(false)
-  bank             Boolean  @default(false)
-  insurance        Boolean  @default(false)
-  financials       Boolean  @default(false)
-  capability       Boolean  @default(false)
-  pastPerformance  Boolean  @default(false)
-
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-}
-
-model Result {
-  id        Int      @id @default(autoincrement())
-  score     Int
-  answers   String
-  createdAt DateTime @default(now())
-}
-
-model BusinessDocument {
-  id            String   @id @default(cuid())
-  documentType  String
-  fileName      String
-  fileUrl       String
-  filePath      String
-  contentType   String?
-  fileSize      Int?
-  certification String?
-  status        String   @default("uploaded")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  @@index([userId])
+  @@index([documentId])
 }

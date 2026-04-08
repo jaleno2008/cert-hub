@@ -1,96 +1,77 @@
-import { put } from '@vercel/blob'
-import { NextResponse } from 'next/server'
-import { prisma } from '../../../lib/prisma'
+import { NextResponse } from "next/server";
+import path from "path";
+import fs from "fs";
+import { writeFile } from "fs/promises";
+import { prisma } from "../../../lib/prisma";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024
+function extractFirstName(email: string) {
+  const raw = email.split("@")[0];
+  const firstPart = raw.split(/[._0-9]/)[0] || "User";
+  return firstPart.charAt(0).toUpperCase() + firstPart.slice(1).toLowerCase();
+}
 
-const ALLOWED_TYPES = [
-  'application/pdf',
-  'image/png',
-  'image/jpeg',
-  'image/jpg',
-  'image/webp',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-]
-
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const formData = await request.formData()
-    const file = formData.get('file') as File | null
-    const documentType = formData.get('documentType') as string | null
-    const certification = formData.get('certification') as string | null
+    const formData = await req.formData();
 
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    const file = formData.get("file") as File | null;
+    const documentId = String(formData.get("documentId") || "");
+    const email = String(formData.get("email") || "").trim().toLowerCase();
+    const name = String(formData.get("name") || "").trim();
+
+    if (!file || !documentId || !email) {
       return NextResponse.json(
-        { error: 'Missing BLOB_READ_WRITE_TOKEN in apps/web/.env.local' },
-        { status: 500 }
-      )
-    }
-
-    if (!file) {
-      return NextResponse.json({ error: 'No file was uploaded.' }, { status: 400 })
-    }
-
-    if (!documentType) {
-      return NextResponse.json({ error: 'Document type is required.' }, { status: 400 })
-    }
-
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json(
-        { error: 'Invalid file type.' },
+        { success: false, message: "Missing file, documentId, or email" },
         { status: 400 }
-      )
+      );
     }
 
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: 'File is too large. Maximum size is 10MB.' },
-        { status: 400 }
-      )
-    }
-
-    const timestamp = Date.now()
-    const safeName = file.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9._-]/g, '')
-    const pathname = `chub-uploads/${documentType}/${timestamp}-${safeName}`
-
-    const blob = await put(pathname, file, {
-      access: 'public',
-      token: process.env.BLOB_READ_WRITE_TOKEN,
-    })
-
-    const savedDocument = await prisma.businessDocument.create({
-      data: {
-        documentType,
-        certification: certification || 'MBE',
-        fileName: file.name,
-        fileUrl: blob.url,
-        filePath: blob.pathname,
-        contentType: file.type,
-        fileSize: file.size,
-        status: 'uploaded',
+    const user = await prisma.user.upsert({
+      where: { email },
+      update: {
+        name: name || extractFirstName(email),
       },
-    })
+      create: {
+        email,
+        name: name || extractFirstName(email),
+      },
+    });
+
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    const fileName = `${Date.now()}-${file.name}`;
+    const uploadDir = path.join(process.cwd(), "uploads");
+
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    const filePath = path.join(uploadDir, fileName);
+    await writeFile(filePath, buffer);
+
+    await prisma.uploadedDocument.create({
+      data: {
+        documentId,
+        fileName: file.name,
+        filePath,
+        userId: user.id,
+        status: "uploaded",
+      },
+    });
 
     return NextResponse.json({
       success: true,
-      id: savedDocument.id,
-      documentType: savedDocument.documentType,
-      certification: savedDocument.certification,
-      fileName: savedDocument.fileName,
-      url: savedDocument.fileUrl,
-      pathname: savedDocument.filePath,
-      contentType: savedDocument.contentType,
-      size: savedDocument.fileSize,
-      uploadedAt: savedDocument.createdAt,
-    })
+      message: "File saved successfully",
+      fileName: file.name,
+      documentId,
+    });
   } catch (error) {
-    console.error('UPLOAD ERROR:', error)
+    console.error("Upload error:", error);
 
     return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : 'Upload failed.',
-      },
+      { success: false, message: "Upload failed" },
       { status: 500 }
-    )
+    );
   }
 }

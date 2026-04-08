@@ -1,116 +1,110 @@
-"use client"
+"use client";
 
-import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const router = useRouter()
-  const [email, setEmail] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
+  const router = useRouter();
+  const [email, setEmail] = useState("");
 
-  const handleLogin = async () => {
-    setError("")
-
+  const handleContinue = () => {
     if (!email.trim()) {
-      setError("Enter an email address.")
-      return
+      alert("Please enter your email address.");
+      return;
     }
 
-    setLoading(true)
+    localStorage.setItem("chubUserEmail", email.trim());
 
-    try {
-      const res = await fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ email })
-      })
+    // Clear any old session flags if needed
+    // localStorage.removeItem("assessmentComplete");
+    // localStorage.removeItem("assessmentAnswers");
+    // localStorage.removeItem("applyAnswers");
 
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.error || "Login failed")
-      }
-
-      localStorage.setItem("testerId", data.tester.id)
-      localStorage.setItem("testerEmail", data.tester.email)
-
-      router.push("/assessment")
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed")
-    } finally {
-      setLoading(false)
-    }
-  }
+    router.push("/assessment");
+  };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "#f8fafc",
-        fontFamily: "Arial, sans-serif",
-        padding: "24px"
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "460px",
-          background: "#ffffff",
-          border: "1px solid #e2e8f0",
-          borderRadius: "16px",
-          padding: "32px"
-        }}
-      >
-        <h1 style={{ marginTop: 0 }}>CHub Tester Login</h1>
+    <main className="min-h-screen bg-black px-6 py-10 text-white">
+      <div className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-6xl items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+        <section className="relative overflow-hidden rounded-[32px] border border-yellow-500/20 bg-[#0b0b0f] p-8 shadow-2xl md:p-10">
+          <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-br from-yellow-500/15 via-transparent to-transparent" />
+          <div className="relative">
+            <p className="text-sm font-semibold uppercase tracking-[0.35em] text-yellow-400">
+              Guided Entry
+            </p>
+            <h1 className="mt-4 max-w-2xl text-5xl font-bold leading-tight text-white md:text-6xl">
+              Certification readiness, guided from the first click.
+            </h1>
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-zinc-300">
+              Log in to move through the exact flow you approved: login,
+              assessment, application, results, and documents.
+            </p>
 
-        <p style={{ color: "#475569" }}>
-          Enter your email to start or continue your certification readiness assessment.
-        </p>
+            <div className="mt-8 grid gap-4 sm:grid-cols-3">
+              {[
+                { label: "5-question intake", value: "Stage first" },
+                { label: "24-question apply", value: "Guided form" },
+                { label: "Results to documents", value: "Connected flow" },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-[24px] border border-zinc-800 bg-black/70 p-5"
+                >
+                  <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
+                    {item.label}
+                  </p>
+                  <p className="mt-3 text-xl font-semibold text-white">
+                    {item.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
-        <input
-          type="email"
-          placeholder="name@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "12px",
-            fontSize: "16px",
-            border: "1px solid #cbd5e1",
-            borderRadius: "8px",
-            boxSizing: "border-box",
-            marginTop: "16px"
-          }}
-        />
+        <section className="rounded-[32px] border border-yellow-500/30 bg-zinc-950 p-8 shadow-2xl">
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-yellow-400">
+              Certification Hub
+            </h2>
+            <p className="mt-3 text-sm leading-7 text-zinc-300">
+              Sign in to begin your guided certification readiness process.
+            </p>
+          </div>
 
-        <button
-          onClick={handleLogin}
-          disabled={loading}
-          style={{
-            marginTop: "16px",
-            width: "100%",
-            padding: "12px 16px",
-            background: "#2563eb",
-            color: "#ffffff",
-            border: "none",
-            borderRadius: "8px",
-            fontWeight: 700,
-            cursor: "pointer"
-          }}
-        >
-          {loading ? "Signing In..." : "Continue"}
-        </button>
+          <div className="space-y-5">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-zinc-200">
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@example.com"
+                className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-4 text-white outline-none transition focus:border-yellow-400"
+              />
+            </div>
 
-        {error ? (
-          <p style={{ color: "red", marginTop: "12px" }}>{error}</p>
-        ) : null}
+            <button
+              onClick={handleContinue}
+              className="w-full rounded-xl bg-yellow-400 px-4 py-4 font-semibold text-black transition hover:bg-yellow-300"
+            >
+              Continue
+            </button>
+          </div>
+
+          <div className="mt-6 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-5">
+            <p className="text-xs uppercase tracking-[0.24em] text-yellow-300">
+              Next up
+            </p>
+            <p className="mt-3 text-sm leading-7 text-yellow-100">
+              You will first complete a short 5-question intake before moving to
+              the full 24-question application.
+            </p>
+          </div>
+        </section>
       </div>
-    </div>
-  )
+    </main>
+  );
 }
